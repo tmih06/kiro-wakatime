@@ -1,0 +1,35 @@
+{
+  "name": "kiro-wakatime",
+  "version": "1.0.0",
+  "description": "WakaTime time tracking for Kiro CLI (kiro-cli) via agent hooks.",
+  "keywords": [
+    "wakatime",
+    "kiro",
+    "kiro-cli",
+    "time-tracking",
+    "productivity",
+    "hooks"
+  ],
+  "license": "BSD-3-Clause",
+  "homepage": "https://github.com/tmih06/kiro-wakatime",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tmih06/kiro-wakatime.git"
+  },
+  "bin": {
+    "kiro-wakatime": "bin/kiro-wakatime.js"
+  },
+  "files": [
+    "bin/",
+    "src/"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node test/smoke.js"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16"
+  }
+}
