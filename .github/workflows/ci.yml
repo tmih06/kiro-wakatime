@@ -1,0 +1,70 @@
+name: CI
+
+# Run on every push to any branch, and on pull requests.
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    name: Node ${{ matrix.node }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        node: ['18', '20', '22']
+        include:
+          # Sanity-check the current LTS on macOS and Windows too, since the
+          # plugin resolves paths and shells out to wakatime-cli per platform.
+          - os: macos-latest
+            node: '20'
+          - os: windows-latest
+            node: '20'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (syntax-check all JS)
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: CLI end-to-end tests
+        run: npm run test:cli
+
+  package:
+    name: Verify package build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build tarball (npm pack)
+        run: npm pack
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kiro-wakatime-tarball
+          path: '*.tgz'
+          if-no-files-found: error
