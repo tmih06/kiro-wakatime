@@ -71,7 +71,7 @@ function buildHeartbeat(event) {
     entity = findEntityPath(event.tool_input);
     if (WRITE_TOOLS.has(toolName)) {
       isWrite = true;
-      category = 'ai coding';
+      category = 'coding';
     } else {
       category = 'code reviewing';
     }
@@ -82,7 +82,7 @@ function buildHeartbeat(event) {
   if (!entity) {
     entity = cwd;
     entityType = 'app';
-    if (!category) category = 'ai coding';
+    if (!category) category = 'coding';
   }
 
   return { entity, entityType, isWrite, category, projectFolder: cwd };
