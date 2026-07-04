@@ -1,6 +1,6 @@
 {
   "name": "kiro-wakatime",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "WakaTime time tracking for Kiro CLI (kiro-cli) via agent hooks.",
   "keywords": [
     "wakatime",
