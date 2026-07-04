@@ -114,7 +114,22 @@ Windows sanity check) and verifies the package builds via `npm pack`.
 
 ## Releasing
 
-Publishing to npm is automated. Bump the version, then push a matching tag:
+Publishing to npm is automated via **[npm Trusted Publishing (OIDC)](https://docs.npmjs.com/trusted-publishers)** —
+no npm token is stored in the repo. GitHub mints a short-lived,
+workflow-scoped credential at publish time, and provenance is generated
+automatically.
+
+**One-time setup** on npmjs.com → your package → Settings → Trusted Publisher:
+
+- Publisher: **GitHub Actions**
+- Organization or user: `tmih06`
+- Repository: `kiro-wakatime`
+- Workflow filename: `publish.yml`
+
+(Optional, recommended afterward: set Publishing access to
+"Require two-factor authentication and disallow tokens" for maximum security.)
+
+**To cut a release**, bump the version and push a matching tag:
 
 ```bash
 npm version patch   # or minor / major — updates package.json and creates a tag
@@ -122,9 +137,7 @@ git push && git push --tags
 ```
 
 The `Publish` workflow triggers on version tags (`v1.2.3` or `1.2.3`), verifies
-the tag matches `package.json`, re-runs lint/tests, and publishes with npm
-provenance. It requires an `NPM_TOKEN` secret (an npm automation token) in the
-repository settings.
+the tag matches `package.json`, re-runs lint/tests, and publishes via OIDC.
 
 ## License
 

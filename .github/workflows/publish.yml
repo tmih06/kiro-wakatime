@@ -7,14 +7,18 @@ on:
       - 'v*.*.*'
       - '[0-9]+.[0-9]+.[0-9]+'
 
+# Trusted Publishing (OIDC): no long-lived npm token is stored anywhere.
+# GitHub mints a short-lived, workflow-scoped credential at publish time.
+# Requires a one-time "Trusted Publisher" setup on npmjs.com pointing at
+# this repo + this workflow filename (publish.yml). See README "Releasing".
 permissions:
   contents: read
-  id-token: write # enable npm provenance
+  id-token: write # required for OIDC trusted publishing + provenance
 
 jobs:
   publish:
     name: Publish to npm
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # trusted publishing requires a cloud-hosted runner
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,9 +26,12 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22' # >= 22.14.0 required for trusted publishing
           registry-url: 'https://registry.npmjs.org'
           cache: npm
+
+      - name: Ensure npm >= 11.5.1 (required for OIDC trusted publishing)
+        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: npm ci
@@ -50,7 +57,8 @@ jobs:
       - name: CLI end-to-end tests
         run: npm run test:cli
 
+      # No NODE_AUTH_TOKEN: the npm CLI auto-detects the OIDC environment and
+      # exchanges it for a short-lived publish token. Provenance is generated
+      # automatically when publishing via trusted publishing.
       - name: Publish
-        run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
