@@ -1,5 +1,7 @@
 # kiro-wakatime
 
+[![CI](https://github.com/tmih06/kiro-wakatime/actions/workflows/ci.yml/badge.svg)](https://github.com/tmih06/kiro-wakatime/actions/workflows/ci.yml)
+
 [WakaTime](https://wakatime.com) time tracking for **Kiro CLI** (`kiro-cli`).
 
 Kiro CLI doesn't have an editor-extension API like VS Code, but it does have an
@@ -96,6 +98,33 @@ WakaTime plugins collect file paths and project names. See WakaTime's
 [data collection docs](https://wakatime.com/faq) and
 [file obfuscation options](https://wakatime.com/faq#hide-filenames) to redact
 file names if needed (configure via `~/.wakatime.cfg`).
+
+## Development
+
+```bash
+npm install      # install dev/runtime deps
+npm run lint     # syntax-check every JS file (node --check)
+npm test         # unit smoke tests (test/smoke.js)
+npm run test:cli # end-to-end CLI tests against an isolated temp HOME
+npm run test:all # lint + unit + CLI
+```
+
+CI runs on every push and pull request across Node 18/20/22 (plus a macOS and
+Windows sanity check) and verifies the package builds via `npm pack`.
+
+## Releasing
+
+Publishing to npm is automated. Bump the version, then push a matching tag:
+
+```bash
+npm version patch   # or minor / major — updates package.json and creates a tag
+git push && git push --tags
+```
+
+The `Publish` workflow triggers on version tags (`v1.2.3` or `1.2.3`), verifies
+the tag matches `package.json`, re-runs lint/tests, and publishes with npm
+provenance. It requires an `NPM_TOKEN` secret (an npm automation token) in the
+repository settings.
 
 ## License
 

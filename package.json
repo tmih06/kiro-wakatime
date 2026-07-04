@@ -27,7 +27,10 @@
     "node": ">=18"
   },
   "scripts": {
-    "test": "node test/smoke.js"
+    "lint": "node scripts/lint.js",
+    "test": "node test/smoke.js",
+    "test:cli": "node test/cli.test.js",
+    "test:all": "npm run lint && npm test && npm run test:cli"
   },
   "dependencies": {
     "adm-zip": "^0.5.16"
