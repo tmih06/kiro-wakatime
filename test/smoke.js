@@ -50,7 +50,7 @@ check('findEntityPath digs file path out of tool_input shapes', () => {
   assert.strictEqual(heartbeat.findEntityPath({ nothing: 1 }), undefined);
 });
 
-check('buildHeartbeat maps fs_write to a write + coding file heartbeat', () => {
+check('buildHeartbeat maps fs_write to an AI-coding write file heartbeat', () => {
   const hb = heartbeat.buildHeartbeat({
     tool_name: 'fs_write',
     tool_input: { path: '/proj/x.js' },
@@ -59,7 +59,21 @@ check('buildHeartbeat maps fs_write to a write + coding file heartbeat', () => {
   assert.strictEqual(hb.entity, '/proj/x.js');
   assert.strictEqual(hb.entityType, 'file');
   assert.strictEqual(hb.isWrite, true);
-  assert.strictEqual(hb.category, 'coding');
+  assert.strictEqual(hb.isAiWrite, true);
+  // Kiro is an AI agent, so writes are tagged "ai coding"; buildArgs downgrades
+  // this to "coding" when the resolved wakatime-cli is too old to support it.
+  assert.strictEqual(hb.category, 'ai coding');
+});
+
+check('buildHeartbeat maps fs_read to a code-reviewing heartbeat', () => {
+  const hb = heartbeat.buildHeartbeat({
+    tool_name: 'fs_read',
+    tool_input: { path: '/proj/x.js' },
+    cwd: '/proj',
+  });
+  assert.strictEqual(hb.isWrite, false);
+  assert.strictEqual(hb.isAiWrite, false);
+  assert.strictEqual(hb.category, 'code reviewing');
 });
 
 check('buildHeartbeat falls back to project app heartbeat', () => {

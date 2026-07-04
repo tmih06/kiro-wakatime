@@ -66,12 +66,17 @@ function buildHeartbeat(event) {
   let entityType = 'file';
   let isWrite = false;
   let category;
+  let isAiWrite = false;
 
   if (toolName && (WRITE_TOOLS.has(toolName) || READ_TOOLS.has(toolName))) {
     entity = findEntityPath(event.tool_input);
     if (WRITE_TOOLS.has(toolName)) {
       isWrite = true;
-      category = 'coding';
+      // Kiro CLI is an AI agent, so file writes are AI-authored code. Tag them
+      // with the "ai coding" category when the CLI supports it (see buildArgs);
+      // otherwise this resolves back to "coding".
+      isAiWrite = true;
+      category = 'ai coding';
     } else {
       category = 'code reviewing';
     }
@@ -82,17 +87,34 @@ function buildHeartbeat(event) {
   if (!entity) {
     entity = cwd;
     entityType = 'app';
-    if (!category) category = 'coding';
+    if (!category) {
+      isAiWrite = true;
+      category = 'ai coding';
+    }
   }
 
-  return { entity, entityType, isWrite, category, projectFolder: cwd };
+  return { entity, entityType, isWrite, category, isAiWrite, projectFolder: cwd };
 }
 
 function quote(s) {
   return s;
 }
 
-function buildArgs(hb, apiKey) {
+// Estimate the number of lines an AI write added/changed, from the tool_input
+// when the content is available. Returns undefined when it can't be determined.
+function estimateAiLineChanges(input) {
+  if (input == null || typeof input !== 'object') return undefined;
+  const text =
+    (typeof input.file_text === 'string' && input.file_text) ||
+    (typeof input.new_str === 'string' && input.new_str) ||
+    (typeof input.content === 'string' && input.content) ||
+    undefined;
+  if (typeof text !== 'string' || text.length === 0) return undefined;
+  // count lines (at least 1 for non-empty content)
+  return text.split('\n').length;
+}
+
+function buildArgs(hb, apiKey, event) {
   const editor = `kiro-cli/unknown kiro-wakatime/${PLUGIN_VERSION}`;
   const args = ['--entity', hb.entity, '--plugin', editor, '--time', String(Date.now() / 1000)];
 
@@ -100,7 +122,25 @@ function buildArgs(hb, apiKey) {
     args.push('--entity-type', hb.entityType);
   }
   if (hb.isWrite) args.push('--write');
-  if (hb.category) args.push('--category', hb.category);
+
+  // Resolve the category: "ai coding" is only valid on wakatime-cli 2.x+.
+  // Fall back to "coding" on older CLIs so heartbeats aren't rejected.
+  let category = hb.category;
+  const aiCapable = deps.supportsAiCoding();
+  if (hb.isAiWrite) {
+    category = aiCapable ? 'ai coding' : 'coding';
+  }
+  if (category) args.push('--category', category);
+
+  // When the CLI supports AI attribution and this is an AI file write, pass the
+  // number of AI-authored lines so the dashboard can split human vs AI code.
+  if (aiCapable && hb.isAiWrite && hb.isWrite && event) {
+    const aiLines = estimateAiLineChanges(event.tool_input);
+    if (typeof aiLines === 'number' && aiLines > 0) {
+      args.push('--ai-line-changes', String(aiLines));
+    }
+  }
+
   if (hb.projectFolder) args.push('--project-folder', hb.projectFolder);
   if (apiKey) args.push('--key', apiKey);
 
@@ -148,7 +188,7 @@ async function run() {
     return 0;
   }
 
-  const args = buildArgs(hb, apiKey);
+  const args = buildArgs(hb, apiKey, event);
 
   await new Promise((resolve) => {
     child_process.execFile(binary, args, { windowsHide: true }, (error, _stdout, stderr) => {

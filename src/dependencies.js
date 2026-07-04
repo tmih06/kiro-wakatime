@@ -146,6 +146,24 @@ function cliVersion() {
   }
 }
 
+// Whether the resolved wakatime-cli supports the "ai coding" category and AI
+// attribution flags. These landed in wakatime-cli 2.x; older 1.x builds reject
+// the "ai coding" category outright, so callers must fall back to "coding".
+// Detected by parsing --help (authoritative for the actual binary in use).
+let _aiCapCache;
+function supportsAiCoding() {
+  if (_aiCapCache !== undefined) return _aiCapCache;
+  try {
+    const out = child_process.execFileSync(getCliLocation(), ['--help'], {
+      encoding: 'utf8',
+    });
+    _aiCapCache = /"ai coding"/.test(out) && /--ai-line-changes/.test(out);
+  } catch (e) {
+    _aiCapCache = false;
+  }
+  return _aiCapCache;
+}
+
 module.exports = {
   osName,
   architecture,
@@ -157,4 +175,5 @@ module.exports = {
   installCli,
   ensureCli,
   cliVersion,
+  supportsAiCoding,
 };
