@@ -58,7 +58,7 @@ On each event, Kiro CLI pipes a JSON payload to `kiro-wakatime heartbeat` over
 STDIN. The plugin:
 
 - Extracts the file path from `tool_input` for `fs_write`/`fs_read` events, and
-  tags writes as `ai coding` and reads as `code reviewing`.
+  tags writes as `coding` and reads as `code reviewing`.
 - Falls back to a project-level (`app`) heartbeat keyed on `cwd` for prompt and
   stop events, so activity still registers even without a file in context.
 - Throttles to at most one heartbeat per file every 2 minutes (writes always
