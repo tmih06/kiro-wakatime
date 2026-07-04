@@ -50,7 +50,7 @@ check('findEntityPath digs file path out of tool_input shapes', () => {
   assert.strictEqual(heartbeat.findEntityPath({ nothing: 1 }), undefined);
 });
 
-check('buildHeartbeat maps fs_write to a write + ai coding file heartbeat', () => {
+check('buildHeartbeat maps fs_write to a write + coding file heartbeat', () => {
   const hb = heartbeat.buildHeartbeat({
     tool_name: 'fs_write',
     tool_input: { path: '/proj/x.js' },
@@ -59,7 +59,7 @@ check('buildHeartbeat maps fs_write to a write + ai coding file heartbeat', () =
   assert.strictEqual(hb.entity, '/proj/x.js');
   assert.strictEqual(hb.entityType, 'file');
   assert.strictEqual(hb.isWrite, true);
-  assert.strictEqual(hb.category, 'ai coding');
+  assert.strictEqual(hb.category, 'coding');
 });
 
 check('buildHeartbeat falls back to project app heartbeat', () => {
